@@ -218,7 +218,7 @@ std::string get_file_name(std::string path) {
 
 std::string replace(std::string str, std::string s0, std::string s1) {
     auto p0 = str.find(s0);
-    return str.replace(p0, p0 + s0.length() - 1, s1);
+    return str.replace(p0, s0.length(), s1);
 }
 
 std::string get_parent(std::string str) {
