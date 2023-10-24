@@ -90,6 +90,9 @@ public:
     }
 
     void apply(osg::Geometry& geometry){
+        if (geometry.getVertexArray() == nullptr || geometry.getVertexArray()->getDataSize() == 0U || geometry.getNumPrimitiveSets() == 0U)
+            return;
+
         if (is_pagedlod)
         geometry_array.push_back(&geometry);        
         else
@@ -215,7 +218,7 @@ public:
 double get_geometric_error(TileBox& bbox){
     if (bbox.max.empty() || bbox.min.empty())
     {
-        LOG_E("bbox is empty!");
+        //LOG_E("bbox is empty!");
         return 0;
     }
 
@@ -229,12 +232,16 @@ double get_geometric_error(TileBox& bbox){
 
 std::string get_file_name(std::string path) {
     auto p0 = path.find_last_of("/\\");
+    if (p0 == std::string::npos)
+        return path;
     return path.substr(p0 + 1);
 }
 
 std::string replace(std::string str, std::string s0, std::string s1) {
     auto p0 = str.find(s0);
-    return str.replace(p0, p0 + s0.length() - 1, s1);
+    if (p0 == std::string::npos)
+        return str;
+    return str.replace(p0, s0.length(), s1);
 }
 
 std::string get_parent(std::string str) {
@@ -743,8 +750,11 @@ write_element_array_primitive(osg::Geometry* g, osg::PrimitiveSet* ps, OsgBuildS
         }
         write_vec3_array(vertexArr, osgState, point_max, point_min);
         // merge mesh bbox
-        expand_bbox3d(osgState->point_max, osgState->point_min, point_max);
-        expand_bbox3d(osgState->point_max, osgState->point_min, point_min);
+        if (point_min.x() <= point_max.x() && point_min.y() <= point_max.y() && point_min.z() <= point_max.z())
+        {
+            expand_bbox3d(osgState->point_max, osgState->point_min, point_max);
+            expand_bbox3d(osgState->point_max, osgState->point_min, point_min);
+        }
     }
     // normal
     osg::Vec3Array* normalArr = (osg::Vec3Array*)g->getNormalArray();
